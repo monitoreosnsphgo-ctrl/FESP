@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoreo de Distritos - Hidalgo</title>
+    <!-- Tailwind CSS para el diseño moderno -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Leaflet CSS para el mapa interactivo -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+</head>
+<body class="bg-slate-50 font-sans min-h-screen flex flex-col">
+
+    <!-- Encabezado institucional -->
+    <header class="bg-indigo-900 text-white shadow-md py-4 px-6">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
+            <h1 class="text-xl font-bold tracking-wide">Servicio de Salud Pública - Hidalgo</h1>
+            <span class="text-sm bg-indigo-800 px-3 py-1 rounded-full mt-2 md:mt-0">Módulo de Distritos[cite: 1]</span>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        <!-- Panel lateral con la lista de distritos[cite: 1] -->
+        <aside class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 lg:col-span-1 flex flex-col h-[500px] lg:h-[700px]">
+            <h2 class="font-bold text-slate-700 text-lg mb-3 pb-2 border-b">Listado de Distritos[cite: 1]</h2>
+            <div id="district-list" class="overflow-y-auto space-y-2 pr-1 flex-grow">
+                <!-- Se llena dinámicamente con JavaScript -->
+            </div>
+        </aside>
+
+        <!-- Contenedor del Mapa -->
+        <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 lg:col-span-3 flex flex-col h-[500px] lg:h-[700px]">
+            <h2 class="font-bold text-slate-700 text-lg mb-3">Mapa Interactivo[cite: 1]</h2>
+            <div id="map" class="w-full flex-grow rounded-lg z-10 border border-slate-100"></div>
+        </section>
+
+    </main>
+
+    <!-- Pie de página -->
+    <footer class="bg-white border-t border-slate-200 py-3 text-center text-xs text-slate-500">
+        Plataforma de visualización geográfica - Compatible con GitHub Pages[cite: 1]
+    </footer>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        // Coordenadas aproximadas centrales para los 12 distritos de Hidalgo basados en la referencia visual[cite: 1]
+        const distritosHidalgo = [
+            { id: 1, name: "1 Tula", coords: [20.05, -99.35], color: "#84cc16", desc: "Información pendiente de agregar para el distrito de Tula." },
+            { id: 2, name: "2 Tulancingo", coords: [20.08, -98.36], color: "#f87171", desc: "Información pendiente de agregar para el distrito de Tulancingo." },
+            { id: 3, name: "3 Pachuca", coords: [20.12, -98.73], color: "#fbbf24", desc: "Información pendiente de agregar para el distrito de Pachuca." },
+            { id: 4, name: "4 Huejutla", coords: [21.14, -98.42], color: "#f472b6", desc: "Información pendiente de agregar para el distrito de Huejutla." },
+            { id: 5, name: "5 Mineral de la Reforma", coords: [20.07, -98.70], color: "#38bdf8", desc: "Información pendiente de agregar para Mineral de la Reforma." },
+            { id: 6, name: "6 Tizayuca", coords: [19.84, -98.98], color: "#fb923c", desc: "Información pendiente de agregar para el distrito de Tizayuca." },
+            { id: 7, name: "7 Actopan", coords: [20.27, -98.93], color: "#e2e8f0", desc: "Información pendiente de agregar para el distrito de Actopan." },
+            { id: 8, name: "8 Ixmiquilpan", coords: [20.48, -99.21], color: "#d97706", desc: "Información pendiente de agregar para el distrito de Ixmiquilpan." },
+            { id: 9, name: "9 Zacualtipán", coords: [20.64, -98.65], color: "#dc2626", desc: "Información pendiente de agregar para el distrito de Zacualtipán." },
+            { id: 10, name: "10 Apan", coords: [19.72, -98.44], color: "#4ade80", desc: "Información pendiente de agregar para el distrito de Apan." },
+            { id: 11, name: "11 Huichapan", coords: [20.36, -99.65], color: "#ea580c", desc: "Información pendiente de agregar para el distrito de Huichapan." },
+            { id: 12, name: "12 Jacala", coords: [21.00, -99.19], color: "#0d9488", desc: "Información pendiente de agregar para el distrito de Jacala." }
+        ];
+
+        // Inicializar el mapa centrado en el estado de Hidalgo
+        const map = L.map('map').setView([20.45, -98.95], 8);
+
+        // Capa base limpia (CartoDB Positron)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+            maxZoom: 12,
+            minZoom: 7
+        }).addTo(map);
+
+        const listContainer = document.getElementById('district-list');
+        const markers = {};
+
+        // Agregar marcadores y elementos a la lista lateral
+        distritosHidalgo.forEach(distrito => {
+            // Crear un círculo con el color representativo simulando la zona del distrito
+            const circleMarker = L.circleMarker(distrito.coords, {
+                radius: 22,
+                fillColor: distrito.color,
+                color: '#334155',
+                weight: 1.5,
+                opacity: 1,
+                fillOpacity: 0.85
+            }).addTo(map);
+
+            // Contenido del cuadro de texto (Popup) que se despliega al dar clic[cite: 1]
+            const popupContent = `
+                <div class="p-2">
+                    <h3 class="font-bold text-base text-indigo-900 border-b pb-1 mb-2">${distrito.name}</h3>
+                    <p class="text-sm text-slate-600 mb-3">${distrito.desc}</p>
+                    <div class="text-xs text-indigo-600 bg-indigo-50 p-2 rounded">
+                        💡 <em>Aquí podrás desplegar estadísticas, indicadores o datos específicos próximamente.</em>
+                    </div>
+                </div>
+            `;
+
+            circleMarker.bindPopup(popupContent);
+            markers[distrito.id] = circleMarker;
+
+            // Elemento interactivo en la lista lateral
+            const item = document.createElement('div');
+            item.className = "flex items-center p-2 rounded-lg hover:bg-slate-100 cursor-pointer transition text-sm border border-transparent hover:border-slate-200";
+            item.innerHTML = `
+                <span class="w-4 h-4 rounded-full mr-3 shrink-0 shadow-sm border border-slate-300" style="background-color: ${distrito.color};"></span>
+                <span class="font-medium text-slate-700">${distrito.name}</span>
+            `;
+
+            // Al hacer clic en la lista, hace zoom al distrito en el mapa y abre su cuadro de texto
+            item.addEventListener('click', () => {
+                map.setView(distrito.coords, 10);
+                circleMarker.openPopup();
+            });
+
+            listContainer.appendChild(item);
+        });
+    </script>
+</body>
+</html>
