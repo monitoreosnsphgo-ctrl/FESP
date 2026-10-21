@@ -47,7 +47,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <script>
-        // Coordenadas aproximadas centrales para los 12 distritos de Hidalgo basados en la referencia visual[cite: 1]
+        // Coordenadas centrales para los 12 distritos de Hidalgo[cite: 1]
         const distritosHidalgo = [
             { id: 1, name: "1 Tula", coords: [20.05, -99.35], color: "#84cc16", desc: "Información pendiente de agregar para el distrito de Tula." },
             { id: 2, name: "2 Tulancingo", coords: [20.08, -98.36], color: "#f87171", desc: "Información pendiente de agregar para el distrito de Tulancingo." },
@@ -66,10 +66,10 @@
         // Inicializar el mapa centrado en el estado de Hidalgo
         const map = L.map('map').setView([20.45, -98.95], 8);
 
-        // Capa base limpia (CartoDB Positron)
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-            maxZoom: 12,
+        // Capa base estándar de OpenStreetMap (Libre y sin API Key)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19,
             minZoom: 7
         }).addTo(map);
 
@@ -78,7 +78,6 @@
 
         // Agregar marcadores y elementos a la lista lateral
         distritosHidalgo.forEach(distrito => {
-            // Crear un círculo con el color representativo simulando la zona del distrito
             const circleMarker = L.circleMarker(distrito.coords, {
                 radius: 22,
                 fillColor: distrito.color,
@@ -88,7 +87,7 @@
                 fillOpacity: 0.85
             }).addTo(map);
 
-            // Contenido del cuadro de texto (Popup) que se despliega al dar clic[cite: 1]
+            // Contenido del cuadro de texto (Popup)[cite: 1]
             const popupContent = `
                 <div class="p-2">
                     <h3 class="font-bold text-base text-indigo-900 border-b pb-1 mb-2">${distrito.name}</h3>
@@ -110,7 +109,7 @@
                 <span class="font-medium text-slate-700">${distrito.name}</span>
             `;
 
-            // Al hacer clic en la lista, hace zoom al distrito en el mapa y abre su cuadro de texto
+            // Al hacer clic en la lista, hace zoom y abre el cuadro de texto
             item.addEventListener('click', () => {
                 map.setView(distrito.coords, 10);
                 circleMarker.openPopup();
