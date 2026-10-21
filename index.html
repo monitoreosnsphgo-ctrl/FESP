@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoreo de Distritos - Hidalgo</title>
-    <!-- Tailwind CSS para el diseño moderno -->
+    <title>Monitoreo de Distritos - Hidalgo (FESP 2025)</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- Leaflet CSS para el mapa interactivo -->
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 </head>
 <body class="bg-slate-50 font-sans min-h-screen flex flex-col">
@@ -15,7 +15,7 @@
     <header class="bg-indigo-900 text-white shadow-md py-4 px-6">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
             <h1 class="text-xl font-bold tracking-wide">Servicio de Salud Pública - Hidalgo</h1>
-            <span class="text-sm bg-indigo-800 px-3 py-1 rounded-full mt-2 md:mt-0">Módulo de Distritos[cite: 1]</span>
+            <span class="text-sm bg-indigo-800 px-3 py-1 rounded-full mt-2 md:mt-0">Evaluación FESP y Semáforo 2025[cite: 2]</span>
         </div>
     </header>
 
@@ -23,16 +23,26 @@
     <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
         
         <!-- Panel lateral con la lista de distritos[cite: 1] -->
-        <aside class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 lg:col-span-1 flex flex-col h-[500px] lg:h-[700px]">
+        <aside class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 lg:col-span-1 flex flex-col h-[550px] lg:h-[720px]">
             <h2 class="font-bold text-slate-700 text-lg mb-3 pb-2 border-b">Listado de Distritos[cite: 1]</h2>
             <div id="district-list" class="overflow-y-auto space-y-2 pr-1 flex-grow">
                 <!-- Se llena dinámicamente con JavaScript -->
             </div>
         </aside>
 
-        <!-- Contenedor del Mapa -->
-        <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 lg:col-span-3 flex flex-col h-[500px] lg:h-[700px]">
-            <h2 class="font-bold text-slate-700 text-lg mb-3">Mapa Interactivo[cite: 1]</h2>
+        <!-- Contenedor del Mapa y Referencia de Semáforo -->
+        <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 lg:col-span-3 flex flex-col h-[550px] lg:h-[720px]">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
+                <h2 class="font-bold text-slate-700 text-lg">Mapa Interactivo y Semáforo[cite: 1, 2]</h2>
+                <!-- Leyenda del Semáforo[cite: 2] -->
+                <div class="flex flex-wrap gap-2 text-xs font-semibold">
+                    <span class="px-2 py-1 rounded bg-blue-500 text-white">&gt;80% Azul[cite: 2]</span>
+                    <span class="px-2 py-1 rounded bg-green-500 text-white">60-80% Verde[cite: 2]</span>
+                    <span class="px-2 py-1 rounded bg-yellow-400 text-slate-900">40-60% Amarillo[cite: 2]</span>
+                    <span class="px-2 py-1 rounded bg-orange-500 text-white">20-40% Naranja[cite: 2]</span>
+                    <span class="px-2 py-1 rounded bg-red-500 text-white">&lt;20% Rojo[cite: 2]</span>
+                </div>
+            </div>
             <div id="map" class="w-full flex-grow rounded-lg z-10 border border-slate-100"></div>
         </section>
 
@@ -47,36 +57,71 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <script>
-        // Coordenadas centrales para los 12 distritos de Hidalgo[cite: 1]
+        // Datos completos de los distritos, cumplimiento y FESP basados en el documento proporcionado
         const distritosHidalgo = [
-            { id: 1, name: "1 Tula", coords: [20.05, -99.35], color: "#84cc16", desc: "Información pendiente de agregar para el distrito de Tula." },
-            { id: 2, name: "2 Tulancingo", coords: [20.08, -98.36], color: "#f87171", desc: "Información pendiente de agregar para el distrito de Tulancingo." },
-            { id: 3, name: "3 Pachuca", coords: [20.12, -98.73], color: "#fbbf24", desc: "Información pendiente de agregar para el distrito de Pachuca." },
-            { id: 4, name: "4 Huejutla", coords: [21.14, -98.42], color: "#f472b6", desc: "Información pendiente de agregar para el distrito de Huejutla." },
-            { id: 5, name: "5 Mineral de la Reforma", coords: [20.07, -98.70], color: "#38bdf8", desc: "Información pendiente de agregar para Mineral de la Reforma." },
-            { id: 6, name: "6 Tizayuca", coords: [19.84, -98.98], color: "#fb923c", desc: "Información pendiente de agregar para el distrito de Tizayuca." },
-            { id: 7, name: "7 Actopan", coords: [20.27, -98.93], color: "#e2e8f0", desc: "Información pendiente de agregar para el distrito de Actopan." },
-            { id: 8, name: "8 Ixmiquilpan", coords: [20.48, -99.21], color: "#d97706", desc: "Información pendiente de agregar para el distrito de Ixmiquilpan." },
-            { id: 9, name: "9 Zacualtipán", coords: [20.64, -98.65], color: "#dc2626", desc: "Información pendiente de agregar para el distrito de Zacualtipán." },
-            { id: 10, name: "10 Apan", coords: [19.72, -98.44], color: "#4ade80", desc: "Información pendiente de agregar para el distrito de Apan." },
-            { id: 11, name: "11 Huichapan", coords: [20.36, -99.65], color: "#ea580c", desc: "Información pendiente de agregar para el distrito de Huichapan." },
-            { id: 12, name: "12 Jacala", coords: [21.00, -99.19], color: "#0d9488", desc: "Información pendiente de agregar para el distrito de Jacala." }
+            {
+                id: 1, name: "Distrito 01 Tula", coords: [20.05, -99.35], cumplimiento: 80.62, color: "#3b82f6", // Azul (>80%)[cite: 2]
+                fesp: { "1": "73.33%", "2": "96.67%", "3": "20%", "4": "75%", "5": "86.67%", "6": "100%", "7": "86.67%", "8": "95%", "9": "57.5%", "10": "100%", "11": "86.67%" }
+            },
+            {
+                id: 2, name: "Distrito 02 Tulancingo", coords: [20.08, -98.36], cumplimiento: 32.22, color: "#f97316", // Naranja (20-40%)[cite: 2]
+                fesp: { "1": "40%", "2": "33.33%", "3": "20%", "4": "35%", "5": "50%", "6": "30%", "7": "26.67%", "8": "20%", "9": "27.5%", "10": "40%", "11": "20%" }
+            },
+            {
+                id: 3, name: "Distrito 03 Pachuca", coords: [20.12, -98.73], cumplimiento: 50.55, color: "#facc15", // Amarillo (40-60%)[cite: 2]
+                fesp: { "1": "80%", "2": "80%", "3": "40%", "4": "45%", "5": "33.33%", "6": "100%", "7": "66.67%", "8": "40%", "9": "35%", "10": "20%", "11": "20%" }
+            },
+            {
+                id: 4, name: "Distrito 04 Huejutla", coords: [21.14, -98.42], cumplimiento: 44.96, color: "#facc15", // Amarillo (40-60%)[cite: 2]
+                fesp: { "1": "60%", "2": "63.33%", "3": "20%", "4": "35%", "5": "43.33%", "6": "60%", "7": "40%", "8": "35%", "9": "35%", "10": "30%", "11": "73.33%" }
+            },
+            {
+                id: 5, name: "Distrito 05 Mineral de la Reforma", coords: [20.07, -98.70], cumplimiento: 24.24, color: "#f97316", // Naranja (20-40%)[cite: 2]
+                fesp: { "1": "20%", "2": "43.33%", "3": "20%", "4": "25%", "5": "20%", "6": "30%", "7": "20%", "8": "20%", "9": "20%", "10": "20%", "11": "20%" }
+            },
+            {
+                id: 6, name: "Distrito 06 Tizayuca", coords: [19.84, -98.98], cumplimiento: 56.07, color: "#facc15", // Amarillo (40-60%)[cite: 2]
+                fesp: { "1": "46.67%", "2": "90%", "3": "30%", "4": "45%", "5": "53.33%", "6": "70%", "7": "46.67%", "8": "60%", "9": "42.5%", "10": "70%", "11": "53.33%" }
+            },
+            {
+                id: 7, name: "Distrito 07 Actopan", coords: [20.27, -98.93], cumplimiento: 26.56, color: "#f97316", // Naranja (20-40%)[cite: 2]
+                fesp: { "1": "26.67%", "2": "40%", "3": "20%", "4": "30%", "5": "23.33%", "6": "20%", "7": "33.33%", "8": "20%", "9": "20%", "10": "30%", "11": "26.67%" }
+            },
+            {
+                id: 8, name: "Distrito 08 Ixmiquilpan", coords: [20.48, -99.21], cumplimiento: 56.72, color: "#facc15", // Amarillo (40-60%)[cite: 2]
+                fesp: { "1": "60%", "2": "66.67%", "3": "20%", "4": "75%", "5": "66.67%", "6": "50%", "7": "26.67%", "8": "60%", "9": "40%", "10": "60%", "11": "86.67%" }
+            },
+            {
+                id: 9, name: "Distrito 09 Zacualtipán", coords: [20.64, -98.65], cumplimiento: 35.42, color: "#f97316", // Naranja (20-40%)[cite: 2]
+                fesp: { "1": "26.67%", "2": "63.33%", "3": "20%", "4": "35%", "5": "33.33%", "6": "80%", "7": "20%", "8": "40%", "9": "20%", "10": "20%", "11": "20%" }
+            },
+            {
+                id: 10, name: "Distrito 10 Apan", coords: [19.72, -98.44], cumplimiento: 47.01, color: "#facc15", // Amarillo (40-60%)[cite: 2]
+                fesp: { "1": "40%", "2": "66.67%", "3": "20%", "4": "55%", "5": "50%", "6": "60%", "7": "33.33%", "8": "50%", "9": "35%", "10": "30%", "11": "53.33%" }
+            },
+            {
+                id: 11, name: "Distrito 11 Huichapan", coords: [20.36, -99.65], cumplimiento: 78.94, color: "#22c55e", // Verde (60-80%)[cite: 2]
+                fesp: { "1": "86.67%", "2": "100%", "3": "30%", "4": "80%", "5": "80%", "6": "60%", "7": "46.67%", "8": "80%", "9": "85%", "10": "100%", "11": "86.67%" }
+            },
+            {
+                id: 12, name: "Distrito 12 Jacala", coords: [21.00, -99.19], cumplimiento: 27.58, color: "#f97316", // Naranja (20-40%)[cite: 2]
+                fesp: { "1": "33.33%", "2": "43.33%", "3": "20%", "4": "25%", "5": "20%", "6": "20%", "7": "33.33%", "8": "30%", "9": "22.5%", "10": "20%", "11": "26.67%" }
+            }
         ];
 
-        // Inicializar el mapa centrado en el estado de Hidalgo
+        // Inicializar el mapa centrado en Hidalgo
         const map = L.map('map').setView([20.45, -98.95], 8);
 
-        // Capa base estándar de OpenStreetMap (Libre y sin API Key)
+        // Capa base de OpenStreetMap (Libre)
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            attribution: '&copy; OpenStreetMap contributors',
             maxZoom: 19,
             minZoom: 7
         }).addTo(map);
 
         const listContainer = document.getElementById('district-list');
-        const markers = {};
 
-        // Agregar marcadores y elementos a la lista lateral
+        // Renderizar marcadores y lista lateral
         distritosHidalgo.forEach(distrito => {
             const circleMarker = L.circleMarker(distrito.coords, {
                 radius: 22,
@@ -84,32 +129,48 @@
                 color: '#334155',
                 weight: 1.5,
                 opacity: 1,
-                fillOpacity: 0.85
+                fillOpacity: 0.9
             }).addTo(map);
 
-            // Contenido del cuadro de texto (Popup)[cite: 1]
+            // Estructura detallada del cuadro de texto con las FESP
             const popupContent = `
-                <div class="p-2">
-                    <h3 class="font-bold text-base text-indigo-900 border-b pb-1 mb-2">${distrito.name}</h3>
-                    <p class="text-sm text-slate-600 mb-3">${distrito.desc}</p>
-                    <div class="text-xs text-indigo-600 bg-indigo-50 p-2 rounded">
-                        💡 <em>Aquí podrás desplegar estadísticas, indicadores o datos específicos próximamente.</em>
+                <div class="p-2 max-w-sm max-h-[350px] overflow-y-auto">
+                    <h3 class="font-bold text-base text-indigo-900 border-b pb-1 mb-1">${distrito.name}</h3>
+                    <div class="mb-2 bg-slate-100 p-2 rounded text-xs">
+                        <span class="font-bold text-slate-700">Cumplimiento General 2025:</span> 
+                        <span class="font-extrabold text-indigo-700">${distrito.cumplimiento}%</span>
                     </div>
+                    <h4 class="font-bold text-xs text-slate-600 mb-1 uppercase tracking-wider">Desglose FESP[cite: 2]:</h4>
+                    <ul class="space-y-1 text-xs text-slate-600">
+                        <li><strong>FESP 1 (Monitoreo):</strong> ${distrito.fesp["1"]}[cite: 2]</li>
+                        <li><strong>FESP 2 (Vigilancia/Riesgos):</strong> ${distrito.fesp["2"]}[cite: 2]</li>
+                        <li><strong>FESP 3 (Investigación):</strong> ${distrito.fesp["3"]}[cite: 2]</li>
+                        <li><strong>FESP 4 (Políticas/Marcos):</strong> ${distrito.fesp["4"]}[cite: 2]</li>
+                        <li><strong>FESP 5 (Participación Social):</strong> ${distrito.fesp["5"]}[cite: 2]</li>
+                        <li><strong>FESP 6 (Recursos Humanos):</strong> ${distrito.fesp["6"]}[cite: 2]</li>
+                        <li><strong>FESP 7 (Medicamentos/Tecnología):</strong> ${distrito.fesp["7"]}[cite: 2]</li>
+                        <li><strong>FESP 8 (Financiamiento):</strong> ${distrito.fesp["8"]}[cite: 2]</li>
+                        <li><strong>FESP 9 (Acceso a Servicios):</strong> ${distrito.fesp["9"]}[cite: 2]</li>
+                        <li><strong>FESP 10 (Promoción de la Salud):</strong> ${distrito.fesp["10"]}[cite: 2]</li>
+                        <li><strong>FESP 11 (Determinantes Sociales):</strong> ${distrito.fesp["11"]}[cite: 2]</li>
+                    </ul>
                 </div>
             `;
 
             circleMarker.bindPopup(popupContent);
-            markers[distrito.id] = circleMarker;
 
-            // Elemento interactivo en la lista lateral
+            // Elemento de la lista lateral
             const item = document.createElement('div');
-            item.className = "flex items-center p-2 rounded-lg hover:bg-slate-100 cursor-pointer transition text-sm border border-transparent hover:border-slate-200";
+            item.className = "flex items-center justify-between p-2 rounded-lg hover:bg-slate-100 cursor-pointer transition text-sm border border-transparent hover:border-slate-200";
             item.innerHTML = `
-                <span class="w-4 h-4 rounded-full mr-3 shrink-0 shadow-sm border border-slate-300" style="background-color: ${distrito.color};"></span>
-                <span class="font-medium text-slate-700">${distrito.name}</span>
+                <div class="flex items-center">
+                    <span class="w-4 h-4 rounded-full mr-3 shrink-0 shadow-sm border border-slate-300" style="background-color: ${distrito.color};"></span>
+                    <span class="font-medium text-slate-700">${distrito.name}[cite: 2]</span>
+                </div>
+                <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">${distrito.cumplimiento}%[cite: 2]</span>
             `;
 
-            // Al hacer clic en la lista, hace zoom y abre el cuadro de texto
+            // Evento para hacer zoom y abrir la tarjeta
             item.addEventListener('click', () => {
                 map.setView(distrito.coords, 10);
                 circleMarker.openPopup();
